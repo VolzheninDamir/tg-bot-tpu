@@ -31,11 +31,14 @@
     git clone https://github.com/VolzheninDamir/tg-bot-tpu.git
     cd tg-bot-tpu
 2. Установите зависимости:
+    ```bash
     pip install -r requirements.txt
 3. Создайте файл config.py на основе примера:
+    ```bash
     BOT_TOKEN = "ваш_токен_бота"
     # Другие настройки...
 4. Запустите бота:
+    ```bash
     python main.py
 
 ⚙️ Технологии
