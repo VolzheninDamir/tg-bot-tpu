@@ -3,7 +3,6 @@ from services.wikipedia_service import search_wikipedia
 from keyboards import get_main_keyboard
 
 def setup_wikipedia_handlers(bot, user_state):
-    # Обработчик кнопки
     @bot.message_handler(func=lambda message: message.text.strip() == 'Поиск в Википедии')
     def handle_wiki_button(message: types.Message):
         # Инициализируем состояние для пользователя, если его нет

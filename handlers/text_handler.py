@@ -6,7 +6,6 @@ from services.currency_service import convert_currency
 from services.weather_service import get_weather_and_hourly_forecast
 
 def setup_text_handlers(bot, user_data, user_state):
-    # Общий обработчик текста (должен быть последним)
     @bot.message_handler(func=lambda message: True)
     def handle_text(message):
         text = message.text.lower()
