@@ -1,25 +1,23 @@
-# handlers/weather_handler.py
 from telebot import types
 from datetime import datetime
 from services.weather_service import get_weather_and_hourly_forecast
 from keyboards import get_main_keyboard, get_weather_keyboard
 
 def setup_weather_handlers(bot, user_data, user_state):
-    @bot.message_handler(func=lambda message: message.text.strip().lower() == 'узнать погоду')
+    # Обработчик кнопки и текстового запроса
+    @bot.message_handler(func=lambda message: 
+        message.text.strip().lower() in ['узнать погоду', 'погода', 'какая погода'])
     def ask_for_city(message):
-        # Инициализируем состояние для пользователя
-        if message.chat.id not in user_state:
-            user_state[message.chat.id] = {}
-        
-        user_state[message.chat.id]['mode'] = 'weather_city'
+        user_state[message.chat.id] = {'mode': 'weather_city'}  # Всегда словарь
         bot.reply_to(
             message,
             "Введите название города, чтобы узнать погоду:",
             reply_markup=types.ReplyKeyboardRemove()
         )
 
+    # Обработчик ввода города
     @bot.message_handler(func=lambda message: 
-        message.chat.id in user_state and 
+        isinstance(user_state.get(message.chat.id), dict) and
         user_state[message.chat.id].get('mode') == 'weather_city')
     def handle_city_input(message):
         city = message.text.strip()
@@ -35,8 +33,9 @@ def setup_weather_handlers(bot, user_data, user_state):
             reply_markup=get_weather_keyboard()
         )
 
+    # Обработчик выбора типа погоды
     @bot.message_handler(func=lambda message: 
-        message.chat.id in user_state and 
+        isinstance(user_state.get(message.chat.id), dict) and
         user_state[message.chat.id].get('mode') == 'weather_type')
     def handle_weather_type(message):
         if message.chat.id not in user_data or 'city' not in user_data[message.chat.id]:
@@ -59,30 +58,27 @@ def setup_weather_handlers(bot, user_data, user_state):
                 "Извините, не удалось получить данные о погоде. Убедитесь, что вы ввели корректное название города.",
                 reply_markup=get_main_keyboard()
             )
-            user_state.pop(message.chat.id, None)
-            user_data.pop(message.chat.id, None)
-            return
+        else:
+            location = weather_data['location']['name']
+            current = weather_data['current']
             
-        location = weather_data['location']['name']
-        current = weather_data['current']
-        forecast_hours = weather_data['forecast']['forecastday'][0]['hour']
-
-        if weather_type == 'погода сейчас':
-            response = (
-                f"Погода в {location} сейчас:\n"
-                f"Состояние: {current['condition']['text']}\n"
-                f"Температура: {current['temp_c']}°C\n"
-                f"Ощущается как: {current['feelslike_c']}°C\n"
-                f"Влажность: {current['humidity']}%"
-            )
-        else:  # 'погода сегодня'
-            hourly_forecast = [
-                f"{datetime.strptime(hour['time'], '%Y-%m-%d %H:%M').strftime('%H:%M')}: "
-                f"{hour['temp_c']}°C, {hour['condition']['text']}"
-                for hour in forecast_hours[datetime.now().hour:]  # Только оставшиеся часы сегодня
-            ]
-            response = f"Почасовой прогноз на сегодня в {location}:\n" + "\n".join(hourly_forecast[:12])  # Ограничиваем 12 часами
-
-        bot.reply_to(message, response, reply_markup=get_main_keyboard())
+            if weather_type == 'погода сейчас':
+                response = (
+                    f"Погода в {location} сейчас:\n"
+                    f"Состояние: {current['condition']['text']}\n"
+                    f"Температура: {current['temp_c']}°C\n"
+                    f"Ощущается как: {current['feelslike_c']}°C"
+                )
+            else:
+                forecast_hours = weather_data['forecast']['forecastday'][0]['hour']
+                hourly_forecast = [
+                    f"{datetime.strptime(hour['time'], '%Y-%m-%d %H:%M').strftime('%H:%M')}: "
+                    f"{hour['temp_c']}°C, {hour['condition']['text']}"
+                    for hour in forecast_hours[datetime.now().hour:][:12]
+                ]
+                response = f"Почасовой прогноз на сегодня в {location}:\n" + "\n".join(hourly_forecast)
+            
+            bot.reply_to(message, response, reply_markup=get_main_keyboard())
+        
         user_state.pop(message.chat.id, None)
         user_data.pop(message.chat.id, None)

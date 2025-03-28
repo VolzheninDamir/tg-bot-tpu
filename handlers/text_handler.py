@@ -8,6 +8,8 @@ from services.weather_service import get_weather_and_hourly_forecast
 def setup_text_handlers(bot, user_data, user_state):
     @bot.message_handler(func=lambda message: True)
     def handle_text(message):
+        if isinstance(user_state.get(message.chat.id), dict):
+            return
         text = message.text.lower()
         response = []
         now = datetime.now()
@@ -62,18 +64,6 @@ def setup_text_handlers(bot, user_data, user_state):
         ]
         if any(word in text for word in goodbye_keywords):
             response.append("До свидания! Если что, я всегда тут.")
-
-        # Обработка запросов на погоду
-        weather_keywords = [
-            'погода', 'погоду', 'какая погода', 'какая сегодня погода', 'погода сегодня',
-            'погода сейчас', 'какая сейчас погода', 'подскажи погоду', 'скажи погоду',
-            'прогноз погоды', 'погода завтра', 'погода на завтра', 'погода на сегодня',
-            'погода на неделю', 'погода в городе', 'погода в москве', 'погода в питере'
-        ]
-        if any(word in text for word in weather_keywords):
-            user_state[message.chat.id] = 'waiting_for_city'
-            bot.reply_to(message, "Введите название города, чтобы узнать погоду.")
-            return
 
         # Обработка запросов на конвертацию валюты
         currency_keywords = [
