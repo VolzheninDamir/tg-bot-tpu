@@ -6,7 +6,7 @@ from keyboards import get_main_keyboard, get_weather_keyboard
 def setup_weather_handlers(bot, user_data, user_state):
     # Обработчик кнопки и текстового запроса
     @bot.message_handler(func=lambda message: 
-        message.text.strip().lower() in ['узнать погоду', 'погода', 'какая погода'])
+        message.text.strip().lower() in ['узнать погоду', 'погода', 'какая погода', 'какая погода?','температура', 'сколько градусов', 'сколько градусов?'])
     def ask_for_city(message):
         user_state[message.chat.id] = {'mode': 'weather_city'}  # Всегда словарь
         bot.reply_to(
